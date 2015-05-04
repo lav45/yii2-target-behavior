@@ -39,23 +39,23 @@ class Target extends Behavior
      */
     public $deleteOldTarget = true;
     /**
-     * @var \Closure
+     * @var \Closure|array
      */
     public $beforeUnlink;
     /**
-     * @var \Closure
+     * @var \Closure|array
      */
     public $afterUnlink;
     /**
-     * @var \Closure
+     * @var \Closure|array
      */
     public $beforeLink;
     /**
-     * @var \Closure
+     * @var \Closure|array
      */
     public $afterLink;
     /**
-     * @var \Closure
+     * @var \Closure|array
      */
     public $getItem;
     /**
@@ -181,7 +181,7 @@ class Target extends Behavior
      */
     protected function getItem($name, $class)
     {
-        if ($this->getItem instanceof \Closure) {
+        if ($this->getItem !== null) {
             return call_user_func($this->getItem, $name, $class);
         } else {
             $condition = [$this->targetRelationAttribute => $name];
@@ -216,7 +216,7 @@ class Target extends Behavior
      */
     private function callUserFunction($function, $parameter)
     {
-        if ($function instanceof \Closure || is_array($function)) {
+        if ($function !== null) {
             call_user_func($function, $parameter);
         }
     }
