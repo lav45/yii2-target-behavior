@@ -31,7 +31,7 @@ class Target extends Behavior
      */
     public $targetRelationAttribute = 'name';
     /**
-     * @var string|boolean
+     * @var string|boolean If the value is false then $targetAttribute will contain an array
      */
     public $delimiter = ',';
     /**
