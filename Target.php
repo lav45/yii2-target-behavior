@@ -10,6 +10,7 @@ namespace lav45\behavior;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
 use yii\helpers\ArrayHelper;
+use yii\validators\Validator;
 
 /**
  * @author Alexey Loban <lav451@gmail.com>
@@ -69,10 +70,16 @@ class Target extends Behavior
     public function events()
     {
         return [
+            ActiveRecord::EVENT_INIT => 'initEvent',
             ActiveRecord::EVENT_AFTER_INSERT => 'afterSave',
             ActiveRecord::EVENT_AFTER_UPDATE => 'afterSave',
             ActiveRecord::EVENT_BEFORE_DELETE => 'beforeDelete',
         ];
+    }
+
+    public function initEvent()
+    {
+        $this->owner->validators[] = Validator::createValidator('safe', $this->owner, [$this->targetAttribute]);
     }
 
     /**
