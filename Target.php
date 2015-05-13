@@ -60,6 +60,10 @@ class Target extends Behavior
      */
     public $getItem;
     /**
+     * @var \Closure|array
+     */
+    public $getExtraColumns;
+    /**
      * @var array
      */
     private $_attributeValue;
@@ -198,12 +202,22 @@ class Target extends Behavior
 
     /**
      * @param $item ActiveRecord
+     * @return array
+     */
+    protected function getExtraColumns($item)
+    {
+        return $this->getExtraColumns === null ? [] : call_user_func($this->getExtraColumns, $item);
+    }
+
+    /**
+     * @param $item ActiveRecord
      */
     protected function link($item)
     {
         $this->callUserFunction($this->beforeLink, $item);
         $this->hasManyToMany() && $item->save(false);
-        $this->owner->link($this->targetRelation, $item);
+        $extraColumns = $this->getExtraColumns($item);
+        $this->owner->link($this->targetRelation, $item, $extraColumns);
         $this->callUserFunction($this->afterLink, $item);
     }
 
