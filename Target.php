@@ -140,12 +140,6 @@ class Target extends Behavior
         foreach ($delete as $item) {
             $this->unlink($item);
         }
-
-        if ($this->afterUnlink !== null && !empty($update)) {
-            foreach ($update as $item) {
-                $this->callUserFunction($this->afterUnlink, $item);
-            }
-        }
     }
 
     public function beforeDelete()
