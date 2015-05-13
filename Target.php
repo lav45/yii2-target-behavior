@@ -83,7 +83,9 @@ class Target extends Behavior
 
     public function initEvent()
     {
-        $this->owner->validators[] = Validator::createValidator('safe', $this->owner, [$this->targetAttribute]);
+        if ($this->targetAttribute !== null) {
+            $this->owner->validators[] = Validator::createValidator('safe', $this->owner, [$this->targetAttribute]);
+        }
     }
 
     /**
