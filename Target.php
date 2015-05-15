@@ -121,7 +121,7 @@ class Target extends Behavior
     public function afterSave()
     {
         if (!$this->isChangeAttribute()) {
-            return;
+            $this->setAttributeValue($this->owner->{$this->targetAttribute});
         }
 
         $old = $this->getOldTarget();
