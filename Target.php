@@ -58,6 +58,10 @@ class Target extends Behavior
     /**
      * @var \Closure|array
      */
+    public $onUpdate;
+    /**
+     * @var \Closure|array
+     */
     public $getItem;
     /**
      * @var \Closure|array
@@ -131,16 +135,17 @@ class Target extends Behavior
         $delete = array_diff_key($old, $update);
         $create = array_diff_key($new, $update);
 
-        /** @var ActiveRecord $class */
-        $class = $this->getRelation()->modelClass;
-
         foreach ($create as $name => $key) {
-            $item = $this->getItem($name, $class);
+            $item = $this->getItem($name);
             $this->link($item);
         }
 
         foreach ($delete as $item) {
             $this->unlink($item);
+        }
+
+        foreach ($update as $item) {
+            $this->callUserFunction($this->onUpdate, $item);
         }
     }
 
@@ -183,11 +188,13 @@ class Target extends Behavior
 
     /**
      * @param string $name
-     * @param ActiveRecord $class
      * @return ActiveRecord
      */
-    protected function getItem($name, $class)
+    protected function getItem($name)
     {
+        /** @var ActiveRecord $class */
+        $class = $this->getRelation()->modelClass;
+
         if ($this->getItem !== null) {
             return call_user_func($this->getItem, $name, $class);
         } else {
