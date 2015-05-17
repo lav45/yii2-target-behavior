@@ -102,8 +102,8 @@ class Target extends Behavior
             $items = $this->owner->getIsNewRecord() ? [] : array_keys($this->getOldTarget());
         } else {
             $items = $this->_attributeValue;
+            $items = array_keys(array_flip($items));
             $items = array_map('trim', $items);
-            $items = array_unique($items);
             $items = array_filter($items);
         }
 
@@ -144,8 +144,10 @@ class Target extends Behavior
             $this->unlink($item);
         }
 
-        foreach ($update as $item) {
-            $this->callUserFunction($this->onUpdate, $item);
+        if ($this->onUpdate !== null) {
+            foreach ($update as $item) {
+                call_user_func($this->onUpdate, $item);
+            }
         }
     }
 
