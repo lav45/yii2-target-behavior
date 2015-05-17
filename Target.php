@@ -144,9 +144,9 @@ class Target extends Behavior
             $this->unlink($item);
         }
 
-        if ($this->onUpdate !== null) {
-            foreach ($update as $item) {
-                call_user_func($this->onUpdate, $item);
+        foreach ($update as $item) {
+            if ($this->callUserFunction($this->onUpdate, $item, false) === false) {
+                break;
             }
         }
     }
@@ -209,21 +209,12 @@ class Target extends Behavior
 
     /**
      * @param $item ActiveRecord
-     * @return array
-     */
-    protected function getExtraColumns($item)
-    {
-        return $this->getExtraColumns === null ? [] : call_user_func($this->getExtraColumns, $item);
-    }
-
-    /**
-     * @param $item ActiveRecord
      */
     protected function link($item)
     {
         $this->callUserFunction($this->beforeLink, $item);
         $this->hasManyToMany() && $item->save();
-        $extraColumns = $this->getExtraColumns($item);
+        $extraColumns = $this->callUserFunction($this->getExtraColumns, $item, []);
         $this->owner->link($this->targetRelation, $item, $extraColumns);
         $this->callUserFunction($this->afterLink, $item);
     }
@@ -240,13 +231,13 @@ class Target extends Behavior
 
     /**
      * @param \Closure|array $function
-     * @param $parameter
+     * @param mixed $params
+     * @param null $default
+     * @return mixed|null
      */
-    private function callUserFunction($function, $parameter)
+    private function callUserFunction($function, $params, $default = null)
     {
-        if ($function !== null) {
-            call_user_func($function, $parameter);
-        }
+        return $function !== null ? call_user_func($function, $params) : $default;
     }
 
     /**
