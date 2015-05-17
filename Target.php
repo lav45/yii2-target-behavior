@@ -151,7 +151,9 @@ class Target extends Behavior
 
     public function beforeDelete()
     {
-        $this->owner->unlinkAll($this->targetRelation, $this->deleteOldTarget);
+        foreach ($this->getOldTarget() as $item) {
+            $this->unlink($item);
+        }
     }
 
     /**
@@ -218,7 +220,7 @@ class Target extends Behavior
     protected function link($item)
     {
         $this->callUserFunction($this->beforeLink, $item);
-        $this->hasManyToMany() && $item->save(false);
+        $this->hasManyToMany() && $item->save();
         $extraColumns = $this->getExtraColumns($item);
         $this->owner->link($this->targetRelation, $item, $extraColumns);
         $this->callUserFunction($this->afterLink, $item);
