@@ -115,7 +115,9 @@ class Target extends Behavior
      */
     public function setAttributeValue($value)
     {
-        if (is_array($value)) {
+        if (empty($value)) {
+            $this->_attributeValue = [];
+        } elseif (is_array($value)) {
             $this->_attributeValue = $value;
         } elseif (is_string($value)) {
             $this->_attributeValue = explode($this->delimiter, $value);
