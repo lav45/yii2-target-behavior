@@ -71,6 +71,10 @@ class Target extends Behavior
      * @var array
      */
     private $_attributeValue;
+    /**
+     * @var array
+     */
+    private $_change_items;
 
     /**
      * @inheritdoc
@@ -81,6 +85,7 @@ class Target extends Behavior
             ActiveRecord::EVENT_INIT => 'initEvent',
             ActiveRecord::EVENT_AFTER_INSERT => 'afterSave',
             ActiveRecord::EVENT_AFTER_UPDATE => 'afterSave',
+            ActiveRecord::EVENT_AFTER_VALIDATE => 'afterValidate',
             ActiveRecord::EVENT_BEFORE_DELETE => 'beforeDelete',
         ];
     }
@@ -92,19 +97,44 @@ class Target extends Behavior
         }
     }
 
+    public function afterValidate()
+    {
+        /** @var ActiveRecord $class */
+        $class = $this->getRelation()->modelClass;
+        $attributes = array_keys($class::getTableSchema()->columns);
+
+        if ($this->hasManyToMany() === false) {
+            $ignore_columns = array_keys($this->getRelation()->link);
+            $attributes = array_diff($attributes, $ignore_columns);
+        }
+
+        foreach ($this->getCreateItems() as $item) {
+            $this->callUserFunction($this->beforeLink, $item);
+            if ($item->validate($attributes) === false) {
+                foreach($item->getErrors() as $errors) {
+                    foreach($errors as $error) {
+                        $error = "[{$item->{$this->targetRelationAttribute}}] $error";
+                        $this->owner->addError($this->targetAttribute, $error);
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * @param bool $asArray
      * @return array|string
      */
     public function getAttributeValue($asArray)
     {
-        if (!$this->isChangeAttribute()) {
+        if ($this->isChangeAttribute() === false) {
             $items = $this->owner->getIsNewRecord() ? [] : array_keys($this->getOldTarget());
         } else {
             $items = $this->_attributeValue;
             $items = array_keys(array_flip($items));
             $items = array_map('trim', $items);
             $items = array_filter($items);
+            $items = array_values($items);
         }
 
         return $asArray ? $items : implode($this->delimiter, $items);
@@ -124,10 +154,13 @@ class Target extends Behavior
         }
     }
 
-    public function afterSave()
+    /**
+     * @return array
+     */
+    protected function getChangeItems()
     {
-        if (!$this->isChangeAttribute()) {
-            $this->setAttributeValue($this->owner->{$this->targetAttribute});
+        if ($this->_change_items !== null) {
+            return $this->_change_items;
         }
 
         $old = $this->getOldTarget();
@@ -138,18 +171,51 @@ class Target extends Behavior
         $create = array_diff_key($new, $update);
 
         foreach ($create as $name => $key) {
-            $item = $this->getItem($name);
+            $create[$name] = $this->getItem($name);
+        }
+
+        $this->_change_items = [$create, $update, $delete];
+
+        return $this->_change_items;
+    }
+
+    /**
+     * @return ActiveRecord[]
+     */
+    protected function getCreateItems()
+    {
+        return $this->getChangeItems()[0];
+    }
+
+    /**
+     * @return ActiveRecord[]
+     */
+    protected function getUpdateItems()
+    {
+        return $this->getChangeItems()[1];
+    }
+
+    /**
+     * @return ActiveRecord[]
+     */
+    protected function getDeleteItems()
+    {
+        return $this->getChangeItems()[2];
+    }
+
+    public function afterSave()
+    {
+        if ($this->isChangeAttribute() === false) {
+            $this->setAttributeValue($this->owner->{$this->targetAttribute});
+        }
+        foreach ($this->getCreateItems() as $item) {
             $this->link($item);
         }
-
-        foreach ($delete as $item) {
+        foreach ($this->getDeleteItems() as $item) {
             $this->unlink($item);
         }
-
-        foreach ($update as $item) {
-            if ($this->callUserFunction($this->onUpdate, $item, false) === false) {
-                break;
-            }
+        foreach ($this->getUpdateItems() as $item) {
+            $this->callUserFunction($this->onUpdate, $item);
         }
     }
 
@@ -214,8 +280,7 @@ class Target extends Behavior
      */
     protected function link($item)
     {
-        $this->callUserFunction($this->beforeLink, $item);
-        $this->hasManyToMany() && $item->save();
+        $this->hasManyToMany() && $item->save(false);
         $extraColumns = $this->callUserFunction($this->getExtraColumns, $item, []);
         $this->owner->link($this->targetRelation, $item, $extraColumns);
         $this->callUserFunction($this->afterLink, $item);

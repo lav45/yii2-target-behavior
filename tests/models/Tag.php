@@ -39,7 +39,9 @@ class Tag extends ActiveRecord
     public function rules()
     {
         return [
-            ['name', 'required'],
+            [['name'], 'required'],
+            [['name'], 'string', 'max' => 6],
+            [['frequency'], 'integer'],
         ];
     }
 }

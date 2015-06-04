@@ -3,7 +3,6 @@
 namespace tests\models;
 
 use yii\db\ActiveRecord;
-use lav45\behavior\Target;
 
 /**
  * Post
@@ -24,33 +23,6 @@ class Post extends ActiveRecord
     public static function tableName()
     {
         return 'post';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function behaviors()
-    {
-        return [
-            [
-                'class' => Target::className(),
-                'targetAttribute' => 'tagNames',
-                'delimiter' => ', ',
-                'beforeLink' => function($tag) {
-                    /** @var Tag $tag */
-                    $tag->frequency++;
-                },
-                'afterUnlink' => function($tag) {
-                    /** @var Tag $tag */
-                    $tag->frequency--;
-                    if ($tag->frequency == 0) {
-                        $tag->delete();
-                    } else {
-                        $tag->update(false);
-                    }
-                }
-            ]
-        ];
     }
 
     /**
