@@ -83,6 +83,8 @@ class Target extends Behavior
     {
         return [
             ActiveRecord::EVENT_INIT => 'initEvent',
+            ActiveRecord::EVENT_BEFORE_INSERT => 'beforeSave',
+            ActiveRecord::EVENT_BEFORE_UPDATE => 'beforeSave',
             ActiveRecord::EVENT_AFTER_INSERT => 'afterSave',
             ActiveRecord::EVENT_AFTER_UPDATE => 'afterSave',
             ActiveRecord::EVENT_AFTER_VALIDATE => 'afterValidate',
@@ -116,6 +118,35 @@ class Target extends Behavior
                         $error = "[{$item->{$this->targetRelationAttribute}}] $error";
                         $this->owner->addError($this->targetAttribute, $error);
                     }
+                }
+            }
+        }
+    }
+
+    public function beforeSave()
+    {
+        if ($this->isChangeAttribute() === false) {
+            $this->setAttributeValue($this->owner->{$this->targetAttribute});
+        }
+
+        foreach ($this->getDeleteItems() as $item) {
+            $this->unlink($item);
+        }
+
+        if ($this->hasManyToMany() === false) {
+            $isPrimaryKey = false;
+            foreach ($this->getCreateItems() as $item) {
+                if ($isPrimaryKey === false) {
+                    $link = $this->getRelation()->link;
+                    if (($isPrimaryKey = $item->isPrimaryKey(array_keys($link))) === false) {
+                        return;
+                    }
+                }
+                if ($item->getIsNewRecord()) {
+                    $item->save(false);
+                }
+                foreach ($link as $pk => $fk) {
+                    $this->owner->$fk = $item->$pk;
                 }
             }
         }
@@ -205,14 +236,8 @@ class Target extends Behavior
 
     public function afterSave()
     {
-        if ($this->isChangeAttribute() === false) {
-            $this->setAttributeValue($this->owner->{$this->targetAttribute});
-        }
         foreach ($this->getCreateItems() as $item) {
             $this->link($item);
-        }
-        foreach ($this->getDeleteItems() as $item) {
-            $this->unlink($item);
         }
         foreach ($this->getUpdateItems() as $item) {
             $this->callUserFunction($this->onUpdate, $item);
@@ -231,7 +256,11 @@ class Target extends Behavior
      */
     protected function getOldTarget()
     {
-        return ArrayHelper::index($this->owner->{$this->targetRelation}, $this->targetRelationAttribute);
+        $model = $this->owner->{$this->targetRelation};
+        if ($this->hasManyToMany() == false) {
+            $model = empty($model) ? [] : [$model];
+        }
+        return ArrayHelper::index($model, $this->targetRelationAttribute);
     }
 
     /**
@@ -280,11 +309,21 @@ class Target extends Behavior
      */
     protected function link($item)
     {
-        $this->hasManyToMany() && $item->save(false);
-        $extraColumns = $this->callUserFunction($this->getExtraColumns, $item, []);
-        $this->owner->link($this->targetRelation, $item, $extraColumns);
+        if ($this->hasManyToMany()) {
+            if ($item->getIsNewRecord()) {
+                $item->save(false);
+            }
+            $extraColumns = $this->callUserFunction($this->getExtraColumns, $item, []);
+            $this->owner->link($this->targetRelation, $item, $extraColumns);
+        } else {
+            $link = $this->getRelation()->link;
+            if ($item->isPrimaryKey(array_keys($link)) === false) {
+                $this->owner->link($this->targetRelation, $item);
+            }
+        }
         $this->callUserFunction($this->afterLink, $item);
     }
+
 
     /**
      * @param $item ActiveRecord
@@ -292,7 +331,10 @@ class Target extends Behavior
     protected function unlink($item)
     {
         $this->callUserFunction($this->beforeUnlink, $item);
-        $this->owner->unlink($this->targetRelation, $item, $this->deleteOldTarget);
+        $link = $this->getRelation()->link;
+        if ($item->isPrimaryKey(array_keys($link)) === false) {
+            $this->owner->unlink($this->targetRelation, $item, $this->deleteOldTarget);
+        }
         $this->callUserFunction($this->afterUnlink, $item);
     }
 
