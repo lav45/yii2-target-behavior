@@ -25,6 +25,18 @@ return [
                 'frequency' => 3,
             ],
         ],
+        'images' => [
+            0 => [
+                'id' => 1,
+                'name' => 'img1.jpg',
+                'post_id' => 1,
+            ],
+            1 => [
+                'id' => 2,
+                'name' => 'img2.jpg',
+                'post_id' => 1,
+            ]
+        ]
     ],
     1 => [
         'id' => 2,
@@ -50,6 +62,23 @@ return [
                 'frequency' => 2,
             ],
         ],
+        'images' => [
+            0 => [
+                'id' => 3,
+                'name' => 'img3.jpg',
+                'post_id' => 2,
+            ],
+            1 => [
+                'id' => 4,
+                'name' => 'img4.jpg',
+                'post_id' => 2,
+            ],
+            2 => [
+                'id' => 5,
+                'name' => 'img5.jpg',
+                'post_id' => 2,
+            ]
+        ]
     ],
     2 => [
         'id' => 3,
@@ -75,5 +104,6 @@ return [
                 'frequency' => 1,
             ],
         ],
+        'images' => []
     ],
 ];

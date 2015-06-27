@@ -23,3 +23,10 @@ CREATE TABLE "post_tag" (
   "tag_id"  INTEGER NOT NULL,
   PRIMARY KEY ("post_id", "tag_id")
 );
+
+DROP TABLE IF EXISTS "image";
+CREATE TABLE "image" (
+  "id"        INTEGER NOT NULL PRIMARY KEY,
+  "name"      VARCHAR (12)   NOT NULL,
+  "post_id"   INTEGER DEFAULT 0
+);

@@ -17,4 +17,9 @@
     <post_tag post_id="3" tag_id="3" />
     <post_tag post_id="3" tag_id="4" />
     <post_tag post_id="3" tag_id="5" />
+    <image id="1" name="img1.jpg" post_id="1" />
+    <image id="2" name="img2.jpg" post_id="1" />
+    <image id="3" name="img3.jpg" post_id="2" />
+    <image id="4" name="img4.jpg" post_id="2" />
+    <image id="5" name="img5.jpg" post_id="2" />
 </dataset>

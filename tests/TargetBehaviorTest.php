@@ -5,6 +5,7 @@ namespace tests;
 use Yii;
 use tests\models\Post;
 use tests\models\Tag;
+use tests\models\Image;
 use lav45\behavior\Target;
 
 /**
@@ -15,7 +16,7 @@ class TargetBehaviorTest extends DatabaseTestCase
     public function testFindPosts()
     {
         $posts = Post::find()
-            ->with('tags')
+            ->with('tags', 'images')
             ->asArray()
             ->all();
 
@@ -26,19 +27,29 @@ class TargetBehaviorTest extends DatabaseTestCase
     {
         /** @var Post $post */
         $post = Post::findOne(2);
-        $post->attachBehavior('target', [
+        $post->attachBehavior('target-tags', [
             'class' => Target::className(),
             'targetAttribute' => 'tagNames',
             'delimiter' => ', ',
         ]);
+        $post->attachBehavior('target-images', [
+            'class' => Target::className(),
+            'targetRelation' => 'images',
+            'targetAttribute' => 'imageNames',
+            'delimiter' => false,
+        ]);
+        $post->init();
 
         $this->assertEquals('tag 2, tag 3, tag 4', $post->tagNames);
+        $this->assertEquals(['img3.jpg', 'img4.jpg', 'img5.jpg'], $post->imageNames);
     }
 
     public function testCreatePostSetTags()
     {
         $post = new Post();
-        $tags = new Target([
+        /** @var Target $tags */
+        $tags = $post->attachBehavior('target-tags', [
+            'class' => Target::className(),
             'targetAttribute' => 'tagNames',
             'delimiter' => ', ',
             'beforeLink' => function($tag) {
@@ -55,8 +66,7 @@ class TargetBehaviorTest extends DatabaseTestCase
                 }
             }
         ]);
-        $post->attachBehavior('target', $tags);
-        $tags->initEvent();
+        $post->init();
 
         $post->setAttributes([
             'title' => 'New post title',
@@ -76,10 +86,61 @@ class TargetBehaviorTest extends DatabaseTestCase
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
 
+    public function testCreatePostSetImages()
+    {
+        $post = new Post();
+        $post->attachBehavior('target-images', [
+            'class' => Target::className(),
+            'targetAttribute' => 'imageNames',
+            'targetRelation' => 'images',
+            'delimiter' => false,
+            'getItem' => function ($name, $class) {
+                return new $class(['name' => $name]);
+            },
+        ]);
+        $post->init();
+
+        $post->setAttributes([
+            'title' => 'New post title',
+            'body' => 'New post body',
+            'imageNames' => ['img1.jpg', 'img2.jpg', 'img3.jpg'],
+        ]);
+
+        $this->assertTrue($post->save());
+
+        $this->assertEquals(['img1.jpg', 'img2.jpg', 'img3.jpg'], $post->imageNames);
+
+        $images = array_map(function($value) {
+            /** @var Image $value */
+            return $value->toArray();
+        }, $post->images);
+
+        $new_images = [
+            [
+                'id' => 6,
+                'name' => 'img1.jpg',
+                'post_id' => 4,
+            ],
+            [
+                'id' => 7,
+                'name' => 'img2.jpg',
+                'post_id' => 4,
+            ],
+            [
+                'id' => 8,
+                'name' => 'img3.jpg',
+                'post_id' => 4,
+            ]
+        ];
+
+        $this->assertEquals($new_images, $images);
+    }
+
     public function testCreatePostSetTagValuesAsArray()
     {
         $post = new Post();
-        $tags = new Target([
+        $post->attachBehavior('target-tags', [
+            'class' => Target::className(),
             'targetAttribute' => 'tagNames',
             'beforeLink' => function($tag) {
                 /** @var Tag $tag */
@@ -95,8 +156,7 @@ class TargetBehaviorTest extends DatabaseTestCase
                 }
             }
         ]);
-        $post->attachBehavior('target', $tags);
-        $tags->initEvent();
+        $post->init();
 
         $post->title = 'New post title';
         $post->body = 'New post body';
@@ -113,11 +173,11 @@ class TargetBehaviorTest extends DatabaseTestCase
     {
         /** @var Post $post */
         $post = Post::findOne(2);
-        $tags = new Target([
+        $post->attachBehavior('target-tags', [
+            'class' => Target::className(),
             'targetAttribute' => 'tagNames',
         ]);
-        $post->attachBehavior('target', $tags);
-        $tags->initEvent();
+        $post->init();
 
         $post->title = 'Updated post title 2';
         $post->body = 'Updated post body 2';
@@ -132,7 +192,8 @@ class TargetBehaviorTest extends DatabaseTestCase
     {
         /** @var Post $post */
         $post = Post::findOne(2);
-        $tags = new Target([
+        $post->attachBehavior('target-tags', [
+            'class' => Target::className(),
             'targetAttribute' => 'tagNames',
             'beforeLink' => function($tag) {
                 /** @var Tag $tag */
@@ -148,8 +209,7 @@ class TargetBehaviorTest extends DatabaseTestCase
                 }
             }
         ]);
-        $post->attachBehavior('target', $tags);
-        $tags->initEvent();
+        $post->init();
 
         $post->title = 'Updated post title 2';
         $post->body = 'Updated post body 2';
@@ -165,7 +225,8 @@ class TargetBehaviorTest extends DatabaseTestCase
     {
         /** @var Post $post */
         $post = Post::findOne(2);
-        $tags = new Target([
+        $post->attachBehavior('target-tags', [
+            'class' => Target::className(),
             'targetAttribute' => 'tagNames',
             'beforeLink' => function($tag) {
                 /** @var Tag $tag */
@@ -181,8 +242,7 @@ class TargetBehaviorTest extends DatabaseTestCase
                 }
             }
         ]);
-        $post->attachBehavior('target', $tags);
-        $tags->initEvent();
+        $post->init();
 
         $post->title = 'Updated post title 2';
         $post->body = 'Updated post body 2';
@@ -198,7 +258,8 @@ class TargetBehaviorTest extends DatabaseTestCase
     {
         /** @var Post $post */
         $post = Post::findOne(2);
-        $tags = new Target([
+        $post->attachBehavior('target-tags', [
+            'class' => Target::className(),
             'targetAttribute' => 'tagNames',
             'afterUnlink' => function($tag) {
                 /** @var Tag $tag */
@@ -210,12 +271,17 @@ class TargetBehaviorTest extends DatabaseTestCase
                 }
             }
         ]);
-        $post->attachBehavior('target', $tags);
-        $tags->initEvent();
+        $post->attachBehavior('target-images', [
+            'class' => Target::className(),
+            'targetAttribute' => 'imageNames',
+            'targetRelation' => 'images',
+            'deleteOldTarget' => false,
+        ]);
+        $post->init();
 
         $this->assertEquals(1, $post->delete());
 
-        $dataSet = $this->getConnection()->createDataSet(['post', 'tag', 'post_tag']);
+        $dataSet = $this->getConnection()->createDataSet(['post', 'tag', 'post_tag', 'image']);
         $expectedDataSet = $this->createFlatXMLDataSet(__DIR__ . '/data/test-delete-post.xml');
         $this->assertDataSetsEqual($expectedDataSet, $dataSet);
     }
@@ -224,15 +290,15 @@ class TargetBehaviorTest extends DatabaseTestCase
     {
         /** @var Post $post */
         $post = Post::findOne(2);
-        $tags = new Target([
+        $post->attachBehavior('target-tags', [
+            'class' => Target::className(),
             'targetAttribute' => 'tagNames',
             'beforeLink' => function($tag) {
                 /** @var Tag $tag */
                 $tag->frequency = 'aaa';
             },
         ]);
-        $post->attachBehavior('target', $tags);
-        $tags->initEvent();
+        $post->init();
 
         $post->tagNames = ['tag 3', 'tag 6', 'mega long tag name'];
 

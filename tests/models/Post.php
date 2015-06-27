@@ -12,8 +12,10 @@ use yii\db\ActiveRecord;
  * @property string $body
  *
  * @property string $tagNames
+ * @property array $imageNames
  *
  * @property Tag[] $tags
+ * @property Image[] $images
  */
 class Post extends ActiveRecord
 {
@@ -52,5 +54,13 @@ class Post extends ActiveRecord
     {
         return $this->hasMany(Tag::className(), ['id' => 'tag_id'])
             ->viaTable('post_tag', ['post_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getImages()
+    {
+        return $this->hasMany(Image::className(), ['post_id' => 'id']);
     }
 }
