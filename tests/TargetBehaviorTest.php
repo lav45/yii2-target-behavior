@@ -3,6 +3,7 @@
 namespace tests;
 
 use Yii;
+use yii\validators\Validator;
 use tests\models\Post;
 use tests\models\Tag;
 use tests\models\Image;
@@ -38,7 +39,6 @@ class TargetBehaviorTest extends DatabaseTestCase
             'targetAttribute' => 'imageNames',
             'delimiter' => false,
         ]);
-        $post->init();
 
         $this->assertEquals('tag 2, tag 3, tag 4', $post->tagNames);
         $this->assertEquals(['img3.jpg', 'img4.jpg', 'img5.jpg'], $post->imageNames);
@@ -47,6 +47,7 @@ class TargetBehaviorTest extends DatabaseTestCase
     public function testCreatePostSetTags()
     {
         $post = new Post();
+        $post->validators[] = Validator::createValidator('safe', $post, ['tagNames']);
         /** @var Target $tags */
         $tags = $post->attachBehavior('target-tags', [
             'class' => Target::className(),
@@ -66,7 +67,6 @@ class TargetBehaviorTest extends DatabaseTestCase
                 }
             }
         ]);
-        $post->init();
 
         $post->setAttributes([
             'title' => 'New post title',
@@ -93,6 +93,7 @@ class TargetBehaviorTest extends DatabaseTestCase
     public function testCreatePostSetImages()
     {
         $post = new Post();
+        $post->validators[] = Validator::createValidator('safe', $post, ['imageNames']);
         $post->attachBehavior('target-images', [
             'class' => Target::className(),
             'targetAttribute' => 'imageNames',
@@ -102,7 +103,6 @@ class TargetBehaviorTest extends DatabaseTestCase
                 return new $class(['name' => $name]);
             },
         ]);
-        $post->init();
 
         $post->setAttributes([
             'title' => 'New post title',
@@ -160,7 +160,6 @@ class TargetBehaviorTest extends DatabaseTestCase
                 }
             }
         ]);
-        $post->init();
 
         $post->title = 'New post title';
         $post->body = 'New post body';
@@ -181,7 +180,6 @@ class TargetBehaviorTest extends DatabaseTestCase
             'class' => Target::className(),
             'targetAttribute' => 'tagNames',
         ]);
-        $post->init();
 
         $post->title = 'Updated post title 2';
         $post->body = 'Updated post body 2';
@@ -213,7 +211,6 @@ class TargetBehaviorTest extends DatabaseTestCase
                 }
             }
         ]);
-        $post->init();
 
         $post->title = 'Updated post title 2';
         $post->body = 'Updated post body 2';
@@ -246,7 +243,6 @@ class TargetBehaviorTest extends DatabaseTestCase
                 }
             }
         ]);
-        $post->init();
 
         $post->title = 'Updated post title 2';
         $post->body = 'Updated post body 2';
@@ -281,7 +277,6 @@ class TargetBehaviorTest extends DatabaseTestCase
             'targetRelation' => 'images',
             'deleteOldTarget' => false,
         ]);
-        $post->init();
 
         $this->assertEquals(1, $post->delete());
 
@@ -302,7 +297,6 @@ class TargetBehaviorTest extends DatabaseTestCase
                 $tag->frequency = 'aaa';
             },
         ]);
-        $post->init();
 
         $post->tagNames = ['tag 3', 'tag 6', 'mega long tag name'];
 
