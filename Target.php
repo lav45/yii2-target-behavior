@@ -102,8 +102,8 @@ class Target extends Behavior
         foreach ($this->getCreateItems() as $item) {
             $this->callUserFunction($this->beforeLink, $item);
             if ($item->validate($attributes) === false) {
-                foreach($item->getErrors() as $errors) {
-                    foreach($errors as $error) {
+                foreach ($item->getErrors() as $errors) {
+                    foreach ($errors as $error) {
                         $error = "[{$item->{$this->targetRelationAttribute}}] $error";
                         $this->owner->addError($this->targetAttribute, $error);
                     }
@@ -118,10 +118,20 @@ class Target extends Behavior
      */
     public function getAttributeValue($asArray)
     {
-        if ($this->isChangeAttribute() === false) {
-            $items = $this->owner->getIsNewRecord() ? [] : array_keys($this->getOldTarget());
-        } else {
+        if ($this->isChangeAttribute()) {
             $items = $this->_attributeValue;
+        } elseif ($this->owner->canGetProperty($this->targetAttribute, true, false)) {
+            $items = $this->owner->{$this->targetAttribute};
+            if ($asArray && is_string($items)) {
+                $items = explode($this->delimiter, $items);
+            }
+        } elseif ($this->owner->getIsNewRecord() === false) {
+            $items = array_keys($this->getOldTarget());
+        } else {
+            $items = [];
+        }
+
+        if (!empty($items)) {
             $items = array_flip(array_flip($items));
             $items = array_map('trim', $items);
             $items = array_filter($items);
