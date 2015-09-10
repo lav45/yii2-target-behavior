@@ -131,10 +131,9 @@ class Target extends Behavior
             $items = $this->owner->getIsNewRecord() ? [] : array_keys($this->getOldTarget());
         } else {
             $items = $this->_attributeValue;
-            $items = array_keys(array_flip($items));
+            $items = array_flip(array_flip($items));
             $items = array_map('trim', $items);
             $items = array_filter($items);
-            $items = array_values($items);
         }
 
         return $asArray ? $items : implode($this->delimiter, $items);

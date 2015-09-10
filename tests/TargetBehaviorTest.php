@@ -79,7 +79,11 @@ class TargetBehaviorTest extends DatabaseTestCase
         $this->assertEquals('tag 4, tag 5, tag 6', $post->tagNames);
 
         $tags->delimiter = false;
-        $this->assertEquals(['tag 4', 'tag 5', 'tag 6'], $post->tagNames);
+        $this->assertEquals([
+            0 =>'tag 4',
+            2 => 'tag 5',
+            4 => 'tag 6'
+        ], $post->tagNames);
 
         $dataSet = $this->getConnection()->createDataSet(['post', 'tag', 'post_tag']);
         $expectedDataSet = $this->createFlatXMLDataSet(__DIR__ . '/data/test-create-post-set-tag-values.xml');
