@@ -310,4 +310,23 @@ class TargetBehaviorTest extends DatabaseTestCase
             ]
         ], $post->getErrors());
     }
+
+    public function testSetStringValue()
+    {
+        /** @var Post $post */
+        $post = Post::findOne(2);
+        $post->attachBehavior('target-tags', [
+            'class' => Target::className(),
+            'targetAttribute' => 'tagNames',
+            'delimiter' => false,
+        ]);
+
+        $this->assertEquals(['tag 2', 'tag 3', 'tag 4'], $post->tagNames);
+
+        $post->tagNames = 'test';
+        $this->assertEquals(['test'], $post->tagNames);
+
+        $post->tagNames = 'test, test2, test3';
+        $this->assertEquals(['test, test2, test3'], $post->tagNames);
+    }
 }

@@ -149,8 +149,8 @@ class Target extends Behavior
             $this->_attributeValue = [];
         } elseif (is_array($value)) {
             $this->_attributeValue = $value;
-        } elseif (is_string($value) && $this->delimiter !== false) {
-            $this->_attributeValue = explode($this->delimiter, $value);
+        } elseif (is_string($value)) {
+            $this->_attributeValue = $this->delimiter === false ? [$value] : explode($this->delimiter, $value);
         }
     }
 
