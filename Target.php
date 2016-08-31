@@ -10,6 +10,7 @@ namespace lav45\behavior;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
 use yii\helpers\ArrayHelper;
+use yii\base\InvalidParamException;
 
 /**
  * @author Alexey Loban <lav451@gmail.com>
@@ -150,7 +151,13 @@ class Target extends Behavior
         } elseif (is_array($value)) {
             $this->_attributeValue = $value;
         } elseif (is_string($value)) {
-            $this->_attributeValue = $this->delimiter === false ? [$value] : explode($this->delimiter, $value);
+            if ($this->delimiter === false) {
+                $this->_attributeValue = [$value];
+            } else {
+                $this->_attributeValue = explode($this->delimiter, $value);
+            }
+        } else {
+            throw new InvalidParamException('$value must be an array or string.');
         }
     }
 
