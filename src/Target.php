@@ -177,7 +177,7 @@ class Target extends Behavior
         $delete = array_diff_key($old, $update);
         $create = array_diff_key($new, $update);
 
-        foreach ($create as $name => $key) {
+        foreach (array_keys($create) as $name) {
             $create[$name] = $this->getItem($name);
         }
 
