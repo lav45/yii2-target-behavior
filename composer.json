@@ -17,16 +17,18 @@
             "email": "lav451@gmail.com"
         }
     ],
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    ],
     "require": {
         "yiisoft/yii2": "~2.0"
     },
-    "require-dev": {
-        "phpunit/phpunit": "~4.0",
-        "phpunit/dbunit": "~1.0"
-    },
     "autoload": {
         "psr-4": {
-            "lav45\\behavior\\": ""
+            "lav45\\behavior\\": "src"
         }
     },
     "extra": {
