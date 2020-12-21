@@ -91,6 +91,10 @@ class Target extends Behavior
 
     public function afterValidate()
     {
+        if ($this->owner->hasErrors()) {
+            return;
+        }
+        
         /** @var ActiveRecord $class */
         $class = $this->getRelation()->modelClass;
         $attributes = array_keys($class::getTableSchema()->columns);
