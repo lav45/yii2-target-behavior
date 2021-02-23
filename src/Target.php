@@ -10,7 +10,7 @@ namespace lav45\behavior;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
 use yii\helpers\ArrayHelper;
-use yii\base\InvalidParamException;
+use yii\base\InvalidArgumentException;
 
 /**
  * @author Alexey Loban <lav451@gmail.com>
@@ -161,7 +161,7 @@ class Target extends Behavior
                 $this->_attributeValue = explode($this->delimiter, $value);
             }
         } else {
-            throw new InvalidParamException('$value must be an array or string.');
+            throw new InvalidArgumentException('$value must be an array or string.');
         }
     }
 
@@ -280,10 +280,9 @@ class Target extends Behavior
 
         if ($this->getItem !== null) {
             return call_user_func($this->getItem, $name, $class);
-        } else {
-            $condition = [$this->targetRelationAttribute => $name];
-            return $class::findOne($condition) ?: new $class($condition);
         }
+        $condition = [$this->targetRelationAttribute => $name];
+        return $class::findOne($condition) ?: new $class($condition);
     }
 
     /**
@@ -308,14 +307,14 @@ class Target extends Behavior
     }
 
     /**
-     * @param \Closure|array $function
+     * @param \Closure|array|string $function
      * @param mixed $params
      * @param null $default
      * @return mixed|null
      */
     private function callUserFunction($function, $params, $default = null)
     {
-        return $function !== null ? call_user_func($function, $params) : $default;
+        return $function !== null ? $function($params) : $default;
     }
 
     /**
@@ -352,9 +351,8 @@ class Target extends Behavior
     {
         if ($this->isAttribute($name)) {
             return $this->getAttributeValue($this->delimiter === false);
-        } else {
-            return parent::__get($name);
         }
+        return parent::__get($name);
     }
 
     /**
